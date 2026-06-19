@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Worms Zone VIP - Asim Games</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050811;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: #0c111c;
+        }
+        /* VIP اسپلش اسکرین */
+        #splashScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #0a1128 0%, #000 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .splash-logo {
+            font-size: 50px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #ff9800, #ff1100, #ff007f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px rgba(255,165,0,0.6));
+            animation: pulse 1.5s infinite alternate;
+        }
+        .splash-sub {
+            color: #45f3ff;
+            font-size: 14px;
+            margin-top: 15px;
+            letter-spacing: 3px;
+            font-weight: bold;
+        }
+        @keyframes pulse {
+            from { transform: scale(0.98); filter: drop-shadow(0 0 15px rgba(255,165,0,0.5)); }
+            to { transform: scale(1.03); filter: drop-shadow(0 0 30px rgba(255,17,0,0.8)); }
+        }
+        /* ٹاپ لائیو یو آئی */
+        #topUI {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 10;
+            display: none;
+        }
+        .ui-panel {
+            background: rgba(10, 17, 40, 0.85);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 15px;
+            border: 2px solid #ff9800;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.2);
+            backdrop-filter: blur(5px);
+        }
+        /* لائیو لیڈر بورڈ */
+        #leaderboard {
+            position: absolute;
+            top: 70px;
+            right: 12px;
+            background: rgba(5, 8, 17, 0.8);
+            border: 2px solid #45f3ff;
+            border-radius: 12px;
+            padding: 12px;
+            color: #fff;
+            width: 180px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 10;
+            display: none;
+            box-shadow: 0 0 15px rgba(69,243,255,0.2);
+        }
+        #leaderboard h3 {
+            color: #45f3ff;
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #45f3ff;
+            padding-bottom: 4px;
+        }
+        .leader-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+            font-weight: 500;
+        }
+        .leader-item.player-row {
+            color: #ff9800;
+            font-weight: bold;
+        }
+        /* مین مینو اوورلے */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 8, 17, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            display: none;
+        }
+        h1 {
+            color: #fff;
+            font-size: 44px;
+            font-weight: 900;
+            margin-bottom: 35px;
+            text-align: center;
+            line-height: 1.1;
+            text-shadow: 0 0 20px rgba(255,152,0,0.4);
+        }
+        .btn {
+            background: linear-gradient(45deg, #ff9800, #ff3300);
+            color: white;
+            border: none;
+            padding: 15px 45px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 35px;
+            cursor: pointer;
+            box-shadow: 0 6px 25px rgba(255, 51, 0, 0.45);
+            margin: 12px;
+            min-width: 230px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        /* سکن شاپ */
+        #shopMenu {
+            width: 92%;
+            max-width: 480px;
+            background: #0f172a;
+            border: 3px solid #ff9800;
+            border-radius: 24px;
+            padding: 25px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+        }
+        .skins-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+        .skin-card {
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 12px;
+            cursor: pointer;
+            background: #1e293b;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .skin-card.selected {
+            border-color: #00ff00;
+            background: #0f2d1a;
+            box-shadow: 0 0 15px rgba(0,255,0,0.4);
+        }
+        .skin-preview {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin: 0 auto 10px auto;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div id="gameContainer">
+    <div id="splashScreen">
+        <div class="splash-logo">ASIM GAMES</div>
+        <div class="splash-sub">WORMS ZONE: VIP EDITION</div>
+    </div>
+
+    <div id="topUI">
+        <div class="ui-panel" id="scoreDisplay">وزن: 0 | لیول: 1</div>
+        <div class="ui-panel" id="coinDisplay">🪙 2500</div>
+    </div>
+
+    <div id="leaderboard">
+        <h3>ٹاپ پلیئرز</h3>
+        <div id="leaderboardContent">
+            </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="mainMenu" class="overlay">
+        <h1>WORMS ZONE<br><span style="font-size:26px; color:#ff9800; letter-spacing:2px;">VIP CLONE</span></h1>
+        <button class="btn" onclick="startGame()">کھیلیں 🚀</button>
+        <button class="btn" style="background: #1e293b; border: 2px solid #45f3ff; box-shadow: none;" onclick="openShop()">سکن شاپ 🛒</button>
+    </div>
+
+    <div id="shopOverlay" class="overlay">
+        <div id="shopMenu">
+            <h2 style="color:#45f3ff;">سکنز گیلری</h2>
+            <div style="margin: 10px 0; font-size: 18px;">آپ کے پاس سکے: <span id="shopCoins" style="color: #ffd700; font-weight:bold;">0</span></div>
+            
+            <div class="skins-grid">
+                <div class="skin-card selected" id="skin0" onclick="selectSkin(0)">
+                    <div class="skin-preview" style="background: radial-gradient(circle, #ff9800, #ff3300);"></div>
+                    <span>ٹائیگر</span>
+                </div>
+                <div class="skin-card" id="skin1" onclick="buyOrSelectSkin(1, 200)">
+                    <div class="skin-preview" style="background: radial-gradient(circle, #00ffff, #0055ff);"></div>
+                    <span id="skinLabel1">200 🪙</span>
+                </div>
+                <div class="skin-card" id="skin2" onclick="buyOrSelectSkin(2, 500)">
+                    <div class="skin-preview" style="background: repeating-linear-gradient(45deg, #ff007f, #ff007f 6px, #000 6px, #000 12px);"></div>
+                    <span id="skinLabel2">500 🪙</span>
+                </div>
+            </div>
+            <button class="btn" style="padding: 10px 25px; font-size: 16px; min-width:160px; margin-top:10px;" onclick="closeShop()">بیک مینو</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // گلوبل ویری ایبلز اور مینو سیٹ اپ اگلی قسط (حصہ 2) میں اسکرپٹ ٹیگ کے نیچے جڑیں گے
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            document.getElementById('splashScreen').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'flex';
+        }, 3000);
+    });
+
+    let playerData = {
+        coins: parseInt(localStorage.getItem('wz_vip_coins')) || 2500, // VIP تحفہ
+        currentSkin: parseInt(localStorage.getItem('wz_vip_skin')) || 0,
+        unlockedSkins: JSON.parse(localStorage.getItem('wz_vip_unlocked')) || [0],
+        level: 1,
+        score: 0
+    };
+
+    function updateUI() {
+        document.getElementById('coinDisplay').innerText = `🪙 ${playerData.coins}`;
+        document.getElementById('shopCoins').innerText = playerData.coins;
+        document.getElementById('scoreDisplay').innerText = `وزن: ${playerData.score} | لیول: ${playerData.level}`;
+        
+        playerData.unlockedSkins.forEach(id => {
+            let label = document.getElementById('skinLabel' + id);
+            if (label) label.innerText = "ان لاک";
+        });
+        
+        document.querySelectorAll('.skin-card').forEach(card => card.classList.remove('selected'));
+        let activeCard = document.getElementById('skin' + playerData.currentSkin);
+        if (activeCard) activeCard.classList.add('selected');
+    }
+
+    function openShop() {
+        document.getElementById('mainMenu').style.display = 'none';
+        document.getElementById('shopOverlay').style.display = 'flex';
+        updateUI();
+    }
+    function closeShop() {
+        document.getElementById('shopOverlay').style.display = 'none';
+        document.getElementById('mainMenu').style.display = 'flex';
+    }
+    function selectSkin(id) {
+        playerData.currentSkin = id;
+        localStorage.setItem('wz_vip_skin', id);
+        updateUI();
+    }
+    function buyOrSelectSkin(id, price) {
+        if (playerData.unlockedSkins.includes(id)) { selectSkin(id); }
+        else if (playerData.coins >= price) {
+            playerData.coins -= price;
+            playerData.unlockedSkins.push(id);
+            localStorage.setItem('wz_vip_coins', playerData.coins);
+            localStorage.setItem('wz_vip_unlocked', JSON.stringify(playerData.unlockedSkins));
+            selectSkin(id);
+        } else { alert("سکے کم ہیں!"); }
+    }
+
+    updateUI();
+</script>
+</body>
+</html>
+    // ==========================================
+    // حصہ 2: سانپوں کا انجن، موومنٹ اور ٹچ کنٹرولز (VIP)
+    // ==========================================
+
+    const MAP_WIDTH = 4000;
+    const MAP_HEIGHT = 4000;
+    let player;
+    let bots = [];
+    let foods = [];
+    let gameActive = false;
+    let gameTick = 0;
+
+    // موبائل ٹچ اور نائٹرو بوسٹر کنٹرولز
+    let lastTap = 0;
+    let isBoosting = false;
+
+    class Snake {
+        constructor(x, y, isBot, skinId, name) {
+            this.x = x;
+            this.y = y;
+            this.isBot = isBot;
+            this.skinId = skinId;
+            this.name = name;
+            this.radius = 16;
+            this.baseSpeed = 3.5;
+            this.speed = this.baseSpeed;
+            this.angle = Math.random() * Math.PI * 2;
+            this.targetAngle = this.angle;
+            this.segments = [];
+            this.length = 30; // VIP شروعاتی سائز
+            this.turnSpeed = 0.09; // Worms Zone اسٹائل اسموتھ مڑنا
+            
+            // شروعاتی باڈی بنانا
+            for (let i = 0; i < this.length; i++) {
+                this.segments.push({ x: this.x, y: this.y });
+            }
+        }
+
+        update() {
+            if (this.isBot) {
+                this.handleAI();
+            } else {
+                // اگر پلیئر ہے تو ڈبل ٹیپ پر اسپیڈ تیز کرنا
+                this.speed = isBoosting ? this.baseSpeed * 1.8 : this.baseSpeed;
+                
+                // بوسٹ استعمال کرنے پر باڈی کا آہستہ آہستہ کم ہونا
+                if (isBoosting && gameTick % 12 === 0 && this.length > 25) {
+                    this.length--;
+                    // یہاں مرے ہوئے سیگمنٹ کو کھانے میں بدلنے کی لاجک حصہ 4 میں آئے گی
+                }
+            }
+
+            // زاویہ (Angle) کو اسموتھ طریقے سے مروڑنا
+            let diff = this.targetAngle - this.angle;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            this.angle += diff * this.turnSpeed;
+
+            // نئی پوزیشن پر لے جانا
+            this.x += Math.cos(this.angle) * this.speed;
+            this.y += Math.sin(this.angle) * this.speed;
+
+            // میپ کی حدود کے اندر رکھنا
+            this.x = Math.max(this.radius, Math.min(MAP_WIDTH - this.radius, this.x));
+            this.y = Math.max(this.radius, Math.min(MAP_HEIGHT - this.radius, this.y));
+
+            // باڈی کے ٹکڑوں کو سر کے پیچھے چلانا
+            this.segments.unshift({ x: this.x, y: this.y });
+            while (this.segments.length > this.length) {
+                this.segments.pop();
+            }
+
+            // سائز کے حساب سے موٹائی (Radius) بڑھانا
+            this.radius = 16 + Math.floor(this.length / 50);
+        }
+
+        handleAI() {
+            // بوٹس کی اسمارٹ موومنٹ لاجک
+            if (Math.random() < 0.02 || !this.closestFood) {
+                let minDist = 500;
+                this.closestFood = null;
+                foods.forEach(f => {
+                    let d = Math.hypot(f.x - this.x, f.y - this.y);
+                    if (d < minDist) {
+                        minDist = d;
+                        this.closestFood = f;
+                    }
+                });
+            }
+
+            if (this.closestFood) {
+                this.targetAngle = Math.atan2(this.closestFood.y - this.y, this.closestFood.x - this.x);
+            } else if (Math.random() < 0.01) {
+                // اگر کھانا نہ ملے تو رینڈم مڑنا
+                this.targetAngle += (Math.random() - 0.5) * 2;
+            }
+        }
+
+        draw(camX, camY) {
+            ctx.save();
+            ctx.translate(camX, camY);
+
+            // باڈی سیگمنٹس ڈرا کرنا
+            for (let i = this.segments.length - 1; i >= 0; i--) {
+                let seg = this.segments[i];
+                let fillStyle = '#ff9800';
+
+                if (this.skinId === 0) {
+                    fillStyle = (i % 6 < 3) ? '#ff9800' : '#ff3300'; // ٹائیگر پٹیاں
+                } else if (this.skinId === 1) {
+                    fillStyle = (i % 6 < 3) ? '#00ffff' : '#0055ff'; // نیون نیلا
+                } else if (this.skinId === 2) {
+                    fillStyle = (i % 8 < 4) ? '#ff007f' : '#000000'; // پنک اور بلیک زبرا
+                } else {
+                    fillStyle = this.skinId; // بوٹس کے رنگ
+                }
+
+                ctx.fillStyle = fillStyle;
+                ctx.beginPath();
+                ctx.arc(seg.x, seg.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // سر اور چمکتی ہوئی آنکھیں (Worms Zone کی طرح فیس فیل)
+            let head = this.segments[0];
+            let eyeOffset = this.radius - 5;
+
+            // بائیں آنکھ
+            let eX1 = head.x + Math.cos(this.angle + 0.4) * eyeOffset;
+            let eY1 = head.y + Math.sin(this.angle + 0.4) * eyeOffset;
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(eX1, eY1, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath(); ctx.arc(eX1, eY1, 2.5, 0, Math.PI * 2); ctx.fill();
+
+            // دائیں آنکھ
+            let eX2 = head.x + Math.cos(this.angle - 0.4) * eyeOffset;
+            let eY2 = head.y + Math.sin(this.angle - 0.4) * eyeOffset;
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(eX2, eY2, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath(); ctx.arc(eX2, eY2, 2.5, 0, Math.PI * 2); ctx.fill();
+
+            // کیڑے کے اوپر نام دکھانا
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            ctx.font = 'bold 13px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.name, head.x, head.y - this.radius - 10);
+
+            ctx.restore();
+        }
+    }
+
+    // موبائل ٹچ ایونٹس انجن
+    window.addEventListener('touchstart', (e) => {
+        if (!gameActive) return;
+        
+        let now = Date.now();
+        // اگر 250 میلی سیکنڈ کے اندر دوبارہ ٹیپ ہو تو اسپیڈ بوسٹ آن
+        if (now - lastTap < 250) {
+            isBoosting = true;
+        }
+        lastTap = now;
+
+        handleTouchMove(e.touches[0].clientX, e.touches[0].clientY);
+    });
+
+    window.addEventListener('touchmove', (e) => {
+        if (!gameActive) return;
+        handleTouchMove(e.touches[0].clientX, e.touches[0].clientY);
+    });
+
+    window.addEventListener('touchend', () => {
+        isBoosting = false; // انگلی ہٹانے پر بوسٹ بند
+    });
+
+    function handleTouchMove(clientX, clientY) {
+        let diffX = clientX - (window.innerWidth / 2);
+        let diffY = clientY - (window.innerHeight / 2);
+        player.targetAngle = Math.atan2(diffY, diffX);
+    }
+              // ==========================================
+    // حصہ 3: لذیذ کھانا (Fruits)، کیمرہ فالو اور ریڈار مینی میپ (VIP)
+    // ==========================================
+
+    const FOOD_TYPES = [
+        { color: '#ff1100', name: 'Apple', score: 3 },
+        { color: '#ffcc00', name: 'Banana', score: 4 },
+        { color: '#00ff00', name: 'Pear', score: 5 },
+        { color: '#ff00ff', name: 'Grape', score: 6 },
+        { color: '#ff6600', name: 'Orange', score: 4 }
+    ];
+
+    // کھانے جنریٹ کرنے کا سسٹم
+    function spawnInitialFood() {
+        foods = [];
+        for (let i = 0; i < 600; i++) { // میپ پر 600 فروٹس بکھیرنا
+            foods.push(createRandomFood(
+                Math.random() * MAP_WIDTH,
+                Math.random() * MAP_HEIGHT
+            ));
+        }
+    }
+
+    function createRandomFood(x, y) {
+        let type = FOOD_TYPES[Math.floor(Math.random() * FOOD_TYPES.length)];
+        return {
+            x: x,
+            y: y,
+            radius: 5 + Math.random() * 4,
+            color: type.color,
+            scoreValue: type.score
+        };
+    }
+
+    // کھانے اور جادوئی چمک کو ڈرا کرنا
+    function drawFood(camX, camY) {
+        ctx.save();
+        ctx.translate(camX, camY);
+
+        for (let i = 0; i < foods.length; i++) {
+            let f = foods[i];
+            
+            // صرف وہ کھانا اسکرین پر رینڈر کرنا جو کیمرے کے سامنے ہو (موبائل پرفارمنس کے لیے کمال لاجک)
+            if (f.x + camX < -20 || f.x + camX > canvas.width + 20 ||
+                f.y + camY < -20 || f.y + camY > canvas.height + 20) {
+                continue;
+            }
+
+            // چمکتا ہوا گراؤنڈ گلو ایفیکٹ
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = f.color;
+
+            ctx.fillStyle = f.color;
+            ctx.beginPath();
+            ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    // میپ کی جادوئی نیٹ گریڈ لائنز ڈرا کرنا (Worms Zone ارینا فیل)
+    MapGridBackground = function(camX, camY) {
+        ctx.save();
+        ctx.strokeStyle = '#162238';
+        ctx.lineWidth = 1.5;
+        
+        let gridSize = 160;
+        let startX = camX % gridSize;
+        let startY = camY % gridSize;
+
+        for (let x = startX; x < canvas.width; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
+        }
+
+        for (let y = startY; y < canvas.height; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+        }
+
+        // میپ کی بیرونی سرخ خطرناک باؤنڈری وال
+        ctx.strokeStyle = '#ff1100';
+        ctx.lineWidth = 8;
+        ctx.strokeRect(camX, camY, MAP_WIDTH, MAP_HEIGHT);
+        ctx.restore();
+    };
+
+    // پرو مینی میپ ریڈار (Mini-Map Radar)
+    function drawMiniMap() {
+        let size = 130; // نقشے کا سائز
+        let margin = 15;
+        let mX = canvas.width - size - margin;
+        let mY = canvas.height - size - margin;
+
+        // مینی میپ کا بیک گراؤنڈ پینل
+        ctx.fillStyle = 'rgba(10, 17, 40, 0.85)';
+        ctx.strokeStyle = '#ff9800';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(mX + size/2, mY + size/2, size/2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        let ratio = size / MAP_WIDTH;
+
+        // نقشے پر تمام بوٹس کو چھوٹے سفید نقطوں سے لائیو ٹریک کرنا
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        bots.forEach(b => {
+            let bx = mX + (b.x * ratio);
+            let by = mY + (b.y * ratio);
+            ctx.beginPath();
+            ctx.arc(bx, by, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // نقشے پر اصلی پلیئر (Asim) کو چمکتے ہوئے نیون نقطے سے دکھانا
+        if (player) {
+            ctx.fillStyle = '#00ff00';
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = '#00ff00';
+            let px = mX + (player.x * ratio);
+            let py = mY + (player.y * ratio);
+            ctx.beginPath();
+            ctx.arc(px, py, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0; // ری سیٹ
+        }
+    }
+              // ==========================================
+    // حصہ 4: ٹکراؤ (Collisions)، لیڈر بورڈ اور فائنل گیم لوپ (VIP)
+    // ==========================================
+
+    // گیم شروع کرنے کا مین فنکشن
+    function startGame() {
+        document.getElementById('mainMenu').style.display = 'none';
+        document.getElementById('topUI').style.display = 'flex';
+        document.getElementById('leaderboard').style.display = 'block';
+        
+        gameTick = 0;
+        playerData.score = 0;
+        playerData.level = 1;
+        isBoosting = false;
+
+        // پلیئر کو میپ کے سینٹر میں سپون کرنا
+        player = new Snake(MAP_WIDTH / 2, MAP_HEIGHT / 2, false, playerData.currentSkin, "ASIM GAMES");
+        
+        // 10 اسمارٹ اے آئی بوٹس بنانا
+        bots = [];
+        let botNames = ["WormKing", "TurboSlayer", "AlphaWorm", "Shadow", "Speedy", "AsimBot", "Glutton", "Matrix", "Phantom", "Apex"];
+        let botColors = ['#e91e63', '#9c27b0', '#2196f3', '#4caf50', '#009688', '#ffeb3b', '#ff5722', '#00e676', '#00b0ff', '#ff3d00'];
+        
+        for (let i = 0; i < 10; i++) {
+            let rx = Math.random() * (MAP_WIDTH - 300) + 150;
+            let ry = Math.random() * (MAP_HEIGHT - 300) + 150;
+            bots.push(new Snake(rx, ry, true, botColors[i], botNames[i]));
+        }
+
+        // فروٹس بچھانا
+        spawnInitialFood();
+        
+        gameActive = true;
+        updateUI();
+        gameLoop();
+    }
+
+    // ہر فریم میں گیم کی لاجک اپڈیٹ کرنا
+    function updateGameEngine() {
+        if (!gameActive) return;
+        gameTick++;
+
+        // پلیئر اور بوٹس کو اپڈیٹ کرنا
+        player.update();
+        bots.forEach(bot => bot.update());
+
+        // 1. کھانا کھانے کی لاجک (Eating Engine)
+        foods.forEach((f, index) => {
+            // پلیئر کا فروٹ کھانا
+            let distToPlayer = Math.hypot(f.x - player.x, f.y - player.y);
+            if (distToPlayer < player.radius + f.radius) {
+                player.length += 2;
+                playerData.score += f.scoreValue * 10;
+                
+                // رینڈم چانس کہ کھانے سے ایک سکہ ملے
+                if (Math.random() < 0.15) playerData.coins += 2;
+                
+                foods[index] = createRandomFood(Math.random() * MAP_WIDTH, Math.random() * MAP_HEIGHT);
+                updateUI();
+            }
+
+            // بوٹس کا فروٹ کھانا
+            bots.forEach(bot => {
+                let distToBot = Math.hypot(f.x - bot.x, f.y - bot.y);
+                if (distToBot < bot.radius + f.radius) {
+                    bot.length += 2;
+                    foods[index] = createRandomFood(Math.random() * MAP_WIDTH, Math.random() * MAP_HEIGHT);
+                }
+            });
+        });
+
+        // 2. کلاسک VIP ٹکراؤ کا نظام (Worms Zone Real io Collisions)
+        let playerHead = player.segments[0];
+
+        for (let i = 0; i < bots.length; i++) {
+            let bot = bots[i];
+            let botHead = bot.segments[0];
+
+            // الف: کیا پلیئر کسی بوٹ کی باڈی سے ٹکرایا؟ (پلیئر آؤٹ)
+            for (let j = 1; j < bot.segments.length; j++) {
+                let seg = bot.segments[j];
+                if (Math.hypot(playerHead.x - seg.x, playerHead.y - seg.y) < player.radius + bot.radius - 4) {
+                    gameOver();
+                    return;
+                }
+            }
+
+            // ب: کیا کوئی بوٹ پلیئر کی باڈی سے ٹکرایا؟ (بوٹ ختم اور فروٹس کا ڈھیر!)
+            for (let j = 1; j < player.segments.length; j++) {
+                let seg = player.segments[j];
+                if (Math.hypot(botHead.x - seg.x, botHead.y - seg.y) < bot.radius + player.radius - 4) {
+                    // کرمبلنگ ایفیکٹ: بوٹ کے مرنے پر اس کی باڈی کو قیمتی کھانے میں بدلنا
+                    explodeSnakeIntoFood(bot);
+                    
+                    // بوٹ کو لسٹ سے نکالنا اور نیا بوٹ سپون کرنا
+                    bots.splice(i, 1);
+                    playerData.score += 500; // بوٹ مارنے کا بڑا بونس
+                    playerData.coins += 50;
+                    
+                    // نیا بوٹ دوبارہ میدان میں لانا
+                    setTimeout(() => {
+                        if (gameActive) {
+                            let rx = Math.random() * MAP_WIDTH;
+                            let ry = Math.random() * MAP_HEIGHT;
+                            bots.push(new Snake(rx, ry, true, bot.skinId, bot.name));
+                        }
+                    }, 3000);
+                    
+                    i--;
+                    updateUI();
+                    break;
+                }
+            }
+        }
+
+        // 3. لائیو لیڈر بورڈ اپڈیٹ کرنا
+        if (gameTick % 30 === 0) {
+            updateLeaderboard();
+        }
+    }
+
+    // سانپ کے مرنے پر اسے کھانے کے ڈھیر میں تبدیل کرنے کا VIP انجن
+    function explodeSnakeIntoFood(snakeObj) {
+        // ہر تیسرے باڈی سیگمنٹ کی جگہ ایک بڑا فروٹ بچھانا
+        for (let k = 0; k < snakeObj.segments.length; k += 3) {
+            let seg = snakeObj.segments[k];
+            foods.push({
+                x: seg.x + (Math.random() - 0.5) * 20,
+                y: seg.y + (Math.random() - 0.5) * 20,
+                radius: 8, // بڑا سائز
+                color: '#ffd700', // سونے کی طرح چمکتا ہوا کھانا
+                scoreValue: 8
+            });
+        }
+    }
+
+    // لیڈر بورڈ کی لائیو اپڈیٹنگ
+    function updateLeaderboard() {
+        let allSnakes = [];
+        allSnakes.push({ name: player.name, score: playerData.score, isPlayer: true });
+        bots.forEach(b => {
+            allSnakes.push({ name: b.name, score: b.length * 40, isPlayer: false });
+        });
+
+        // اسکور کے حساب سے ترتیب دینا (High to Low)
+        allSnakes.sort((a, b) => b.score - a.score);
+
+        let html = '';
+        // صرف ٹاپ 5 دکھانا
+        for (let i = 0; i < Math.min(5, allSnakes.length); i++) {
+            let s = allSnakes[i];
+            let rowClass = s.isPlayer ? 'leader-item player-row' : 'leader-item';
+            html += `<div class="${rowClass}">
+                        <span>${i+1}. ${s.name}</span>
+                        <span>${s.score}</span>
+                     </div>`;
+        }
+        document.getElementById('leaderboardContent').innerHTML = html;
+    }
+
+    // رینڈرنگ لوپ (Drawing Everything)
+    function drawGameEngine() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // کیمرہ آفسیٹ لاجک تاکہ پلیئر ہمیشہ اسکرین کے بیچ میں رہے
+        let camX = canvas.width / 2 - player.x;
+        let camY = canvas.height / 2 - player.y;
+
+        // بیک گراؤنڈ گرڈ
+        MapGridBackground(camX, camY);
+
+        // کھانا ڈرا کرنا
+        drawFood(camX, camY);
+
+        // بوٹس ڈرا کرنا
+        bots.forEach(bot => bot.draw(camX, camY));
+
+        // اصلی پلیئر ڈرا کرنا
+        player.draw(camX, camY);
+
+        // مینی میپ ریڈار ڈرا کرنا
+        drawMiniMap();
+    }
+
+    // مین گیم لوپ
+    function gameLoop() {
+        if (!gameActive) return;
+        updateGameEngine();
+        drawGameEngine();
+        requestAnimationFrame(gameLoop);
+    }
+
+    // گیم اوور ہینڈلر
+    function gameOver() {
+        gameActive = false;
+        localStorage.setItem('wz_vip_coins', playerData.coins);
+        
+        alert(`گیم اوور، عاصم بھائی!\nآپ کا اسکور: ${playerData.score}\nکل جمع شدہ سکے: 🪙 ${playerData.coins}`);
+        
+        document.getElementById('topUI').style.display = 'none';
+        document.getElementById('leaderboard').style.display = 'none';
+        document.getElementById('mainMenu').style.display = 'flex';
+        updateUI();
+    }
+          
