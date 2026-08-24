@@ -1,164 +1,277 @@
+html
 <!DOCTYPE html>
-<html lang="ur" dir="rtl">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Spin & Earn</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>37x37 3D House Plan</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #fff; text-align: center; padding: 20px; }
-        .container { max-width: 400px; background: #1e1e1e; margin: 0 auto; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        h1 { color: #4CAF50; font-size: 24px; }
-        .stats-box { display: flex; justify-content: space-between; background: #2d2d2d; padding: 10px; border-radius: 10px; margin-bottom: 20px; font-weight: bold; }
-        .wheel-container { position: relative; width: 250px; height: 250px; margin: 20px auto; }
-        .wheel { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #4CAF50; transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99); background: conic-gradient(#e74c3c 0deg 60deg, #3498db 60deg 120deg, #f1c40f 120deg 180deg, #2ecc71 180deg 240deg, #9b59b6 240deg 300deg, #1abc9c 300deg 360deg); }
-        .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid #fff; z-index: 10; }
-        button { background: #4CAF50; color: white; border: none; padding: 12px 25px; font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
-        button:disabled { background: #555; cursor: not-allowed; }
-        .info-text { font-size: 14px; color: #bbb; margin-top: 10px; }
+        body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+        #info {
+            position: absolute; top: 20px; left: 20px;
+            background: rgba(0,0,0,0.7); color: #fff;
+            padding: 12px 18px; border-radius: 8px;
+            pointer-events: none; user-select: none;
+            font-size: 14px; z-index: 10;
+        }
+        #info span { display: inline-block; width: 12px; height: 12px; margin-right: 6px; border-radius: 2px; }
+        .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+        .legend-item { display: flex; align-items: center; font-size: 12px; }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>🎯 Lucky Spin & Earn</h1>
-    <div class="stats-box">
-        <div>💰 پوائنٹس: <span id="userPoints">0</span></div>
-        <div>🔄 باقی اسپن: <span id="spinCount">2</span></div>
-    </div>
-        <div class="wheel-container">
-        <div class="pointer"></div>
-        <div class="wheel" id="wheel"></div>
+    <div id="info">
+        <strong>🏠 37ft x 37ft 3D Layout</strong>
+        <div class="legend" id="legend"></div>
+        <div style="margin-top:6px; font-size:12px; opacity:0.7;">🖱️ Drag to rotate · Scroll to zoom</div>
     </div>
 
-    <button id="spinBtn" onclick="spinWheel()">🔄 اسپن گھمائیں</button>
-    <button id="watchBtn" onclick="watchAd()" style="background: #3498db; display: none;">📺 2 ویڈیوز دیکھیں (+1 اسپن)</button>
-
-    <div class="info-text" id="statusMsg">روزانہ 2 فری اسپن ملیں گے!</div>
-    <div class="info-text" style="color: #666; font-size: 12px;">آج کے حاصل کردہ پوائنٹس: <span id="dailyPoints">0</span> / 2000</div>
-
-    <hr style="border: 1px solid #333; margin: 20px 0;">
-
-    <!-- ودڈرا سیکشن -->
-    <div id="withdrawSection" style="display: none; background: #252525; padding: 15px; border-radius: 10px;">
-        <h3 style="color: #f1c40f; margin-top: 0;">🎁 مبارک ہو! 10,000 پوائنٹس پورے ہو گئے</h3>
-        <p style="font-size: 14px;">نیچے اپنا ایزی پیسہ / جیز کیش نمبر لکھ کر ودڈرا کریں۔</p>
-        <input type="text" id="walletName" placeholder="اکاؤنٹ ہولڈر کا نام" style="width:90%; padding:8px; margin-bottom:10px; border-radius:5px; border:none;"><br>
-        <input type="text" id="walletNumber" placeholder="ایزی پیسہ / جیز کیش نمبر" style="width:90%; padding:8px; margin-bottom:10px; border-radius:5px; border:none;"><br>
-        <button onclick="requestWithdraw()" style="background: #e67e22;">💸 واٹس ایپ پر کلیم بھیجیں</button>
-    </div>
-</div>
-<script>
-    // لوکل اسٹوریج سے ڈیٹا لوڈ کرنا
-    let points = parseInt(localStorage.getItem('spin_points')) || 0;
-    let remainingSpins = parseInt(localStorage.getItem('remaining_spins'));
-    let dailyPoints = parseInt(localStorage.getItem('daily_points')) || 0;
-    let lastSpinDate = localStorage.getItem('last_spin_date') || "";
-    let watchedAdsCount = parseInt(localStorage.getItem('watched_ads_count')) || 0;
-
-    // تاریخ چیک کرنا (روزانہ ری سیٹ کرنے کے لیے)
-    let today = new Date().toDateString();
-    if (lastSpinDate !== today) {
-        remainingSpins = 2; // روزانہ 2 فری اسپن
-        dailyPoints = 0;
-        watchedAdsCount = 0;
-        localStorage.setItem('last_spin_date', today);
-    }
-    if (isNaN(remainingSpins)) remainingSpins = 2;
-
-    // اسکرین پر ڈیٹا اپڈیٹ کرنا
-    function updateUI() {
-        document.getElementById('userPoints').innerText = points;
-        document.getElementById('spinCount').innerText = remainingSpins;
-        document.getElementById('dailyPoints').innerText = dailyPoints;
-
-        if (remainingSpins > 0) {
-            document.getElementById('spinBtn').disabled = false;
-            document.getElementById('watchBtn').style.display = 'none';
-        } else {
-            document.getElementById('spinBtn').disabled = true;
-            document.getElementById('watchBtn').style.display = 'block';
-            document.getElementById('statusMsg').innerText = `باقی اسپن ختم! 2 ویڈیوز دیکھ کر 1 اسپن حاصل کریں۔ (دیکھی گئی ویڈیوز: ${watchedAdsCount}/2)`;
-        }
-
-        // اگر 10 ہزار پوائنٹس ہو گئے تو ودڈرا کھولیں
-        if (points >= 10000) {
-            document.getElementById('withdrawSection').style.display = 'block';
-        }
-    }
-
-    // اسپن گھمانے کا فنکشن
-    function spinWheel() {
-        if (remainingSpins <= 0) return;
-        if (dailyPoints >= 2000) {
-            alert('❌ آپ کی آج کی 2000 پوائنٹس کی حد پوری ہو چکی ہے! کل دوبارہ کوشش کریں۔');
-            return;
-        }
-
-        document.getElementById('spinBtn').disabled = true;
-        remainingSpins--;
-        localStorage.setItem('remaining_spins', remainingSpins);
-
-        let degrees = Math.floor(Math.random() * 360) + 1440; // کم از کم 4 چکر
-        document.getElementById('wheel').style.transform = `rotate(${degrees}deg)`;
-
-        setTimeout(() => {
-            // پوائنٹس کا فیصلہ کرنا (6 حصے ہیں)
-            let values = [10, 50, 20, 100, 30, 50];
-            let actualDegree = degrees % 360;
-            let index = Math.floor(actualDegree / 60);
-            let wonPoints = values[index] || 20;
-
-            // پوائنٹس جمع کرنا
-            points += wonPoints;
-            dailyPoints += wonPoints;
-
-            localStorage.setItem('spin_points', points);
-            localStorage.setItem('daily_points', dailyPoints);
-
-            alert(`🎉 مبارک ہو! آپ نے ${wonPoints} پوائنٹس جیتے!`);
-            updateUI();
-        }, 4000);
-    }
-        // ویڈیو ایڈ دیکھنے کا فنکشن
-    function watchAd() {
-        // یہاں ابھی عارضی ایڈ پاپ اپ ہے، بعد میں ادھر اصلی ایڈ کا کوڈ آئے گا
-        alert("📺 ایڈ (ویڈیو) لوڈ ہو رہی ہے... براہ کرم 5 سیکنڈ دیکھیں اور بند نہ کریں۔");
-        
-        setTimeout(() => {
-            watchedAdsCount++;
-            localStorage.setItem('watched_ads_count', watchedAdsCount);
-
-            if (watchedAdsCount >= 2) {
-                remainingSpins += 1;
-                watchedAdsCount = 0;
-                localStorage.setItem('remaining_spins', remainingSpins);
-                localStorage.setItem('watched_ads_count', watchedAdsCount);
-                alert("✅ آپ نے 2 ویڈیوز دیکھ لیں۔ آپ کو 1 اضافی اسپن مل گیا ہے!");
-            } else {
-                alert(`آدھا ٹارگٹ پورا! 1 اور ویڈیو دیکھیں تو اسپن ملے گا۔ (${watchedAdsCount}/2)`);
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
             }
-            updateUI();
-        }, 3000);
-    }
+        }
+    </script>
+       <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-    // واٹس ایپ پر ودڈرا کلیم بھیجنے کا فنکشن
-    function requestWithdraw() {
-        let name = document.getElementById('walletName').value;
-        let number = document.getElementById('walletNumber').value;
+        // -------- Scene setup --------
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111122);
 
-        if (!name || !number) {
-            alert('براہ کرم اپنا نام اور نمبر صحیح لکھیں!');
-            return;
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
+        camera.position.set(45, 35, 55);
+        camera.lookAt(18, 5, 18);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none'; // allow click-through to orbit
+        document.body.appendChild(labelRenderer.domElement);
+           const controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(18, 5, 18);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 15;
+        controls.maxDistance = 100;
+        controls.maxPolarAngle = Math.PI / 2.1;
+        controls.update();
+
+        // -------- Lighting --------
+        const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
+        scene.add(ambientLight);
+
+        const sunLight = new THREE.DirectionalLight(0xffeedd, 1.8);
+        sunLight.position.set(30, 40, 20);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 2048;
+        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.camera.left = -50;
+        sunLight.shadow.camera.right = 50;
+        sunLight.shadow.camera.top = 50;
+        sunLight.shadow.camera.bottom = -50;
+        scene.add(sunLight);
+
+        const fillLight = new THREE.DirectionalLight(0x88aaff, 0.4);
+        fillLight.position.set(-20, 10, -30);
+        scene.add(fillLight);
+
+        // -------- Ground plane --------
+        const groundGeo = new THREE.PlaneGeometry(42, 42);
+        const groundMat = new THREE.MeshStandardMaterial({
+            color: 0x2a2a3a,
+            roughness: 0.9,
+            metalness: 0.1,
+            side: THREE.DoubleSide,
+        });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.set(18, -0.05, 18);
+        ground.receiveShadow = true;
+        scene.add(ground);
+               // Grid helper (feet)
+        const grid = new THREE.GridHelper(42, 21, 0x88aaff, 0x445577);
+        grid.position.set(18, 0, 18);
+        scene.add(grid);
+
+        // -------- Room data: x, z, width, depth, color, name --------
+        const rooms = [
+            { x: 0, z: 0, w: 12, d: 15, color: 0xffaa66, name: 'Room 1 (12×15)' },
+            { x: 12, z: 0, w: 8, d: 15, color: 0x66aaff, name: 'Front Hall' },
+            { x: 20, z: 0, w: 12, d: 17, color: 0x66ffaa, name: 'Drawing Room (12×17)' },
+            { x: 32, z: 0, w: 5, d: 8, color: 0xff66aa, name: 'Bath 1 (5×8)' },
+            { x: 12, z: 15, w: 8, d: 22, color: 0x88ccff, name: 'Corridor' },
+            { x: 0, z: 22, w: 12, d: 15, color: 0xaa66ff, name: 'Room 2 (12×15)' },
+            { x: 20, z: 25, w: 8, d: 12, color: 0x66ffcc, name: 'Kitchen (8×12)' },
+            { x: 28, z: 20, w: 5, d: 8, color: 0xff66cc, name: 'Bath 2 (5×8)' },
+        ];
+
+        const wallColor = 0xddddff;
+        const wallMat = new THREE.MeshStandardMaterial({
+            color: wallColor,
+            roughness: 0.5,
+            metalness: 0.1,
+            transparent: true,
+            opacity: 0.85,
+        });
+        const wallMatOpaque = new THREE.MeshStandardMaterial({
+            color: wallColor,
+            roughness: 0.5,
+            metalness: 0.1,
+        });
+
+        const floorHeight = 0.2;
+        const wallHeight = 10;
+        const wallThick = 0.3;
+
+        // Helper: add a wall as a box
+        function addWall(px, py, pz, w, h, d, mat = wallMat) {
+            const geo = new THREE.BoxGeometry(w, h, d);
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(px, py, pz);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+            return mesh;
         }
 
-        let adminWhatsApp = "923001234567"; // 👈 یہاں اپنا اصلی واٹس ایپ نمبر لکھیں (بغیر پلس سائن کے)
-        let message = `السلام علیکم عاصم بھائی،\n\nمیں نے Lucky Spin ایپ پر 10,000 پوائنٹس پورے کر لیے ہیں۔ میرا ودڈرا کلیم یہ ہے:\n\n👤 نام: ${name}\n📱 نمبر: ${number}\n💰 کل پوائنٹس: ${points}`;
-        
-        let url = `https://api.whatsapp.com/send?phone=${adminWhatsApp}&text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank');
-    }
+        // Helper: add a floor slab
+        function addFloor(px, pz, w, d, color) {
+            const mat = new THREE.MeshStandardMaterial({
+                color: color,
+                roughness: 0.7,
+                metalness: 0.1,
+            });
+            const geo = new THREE.BoxGeometry(w, floorHeight, d);
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(px, floorHeight / 2, pz);
+            mesh.receiveShadow = true;
+            mesh.castShadow = true;
+            scene.add(mesh);
+            return mesh;
+        }
 
-    // ایپ لوڈ ہوتے ہی سسٹم چلانا
-    updateUI();
-</script>
+        // Helper: add a label (CSS2D)
+        function addLabel(text, px, py, pz, color = '#ffffff') {const div = document.createElement('div');
+            div.textContent = text;
+            div.style.color = color;
+            div.style.fontSize = '14px';
+            div.style.fontWeight = 'bold';
+            div.style.textShadow = '1px 1px 3px rgba(0,0,0,0.8)';
+            div.style.background = 'rgba(0,0,0,0.6)';
+            div.style.padding = '4px 10px';
+            div.style.borderRadius = '4px';
+            div.style.border = '1px solid rgba(255,255,255,0.2)';
+            div.style.pointerEvents = 'none';
+            const label = new CSS2DObject(div);
+            label.position.set(px, py, pz);
+            scene.add(label);
+            return label;
+        }
+
+        // -------- Build rooms --------
+        rooms.forEach(room => {
+            const cx = room.x + room.w / 2;
+            const cz = room.z + room.d / 2;
+
+            // Floor
+            addFloor(cx, cz, room.w, room.d, room.color);
+
+            // Walls (only if not sharing with another room – but we draw all, they overlap nicely)
+            // Front (z = room.z)
+            addWall(cx, wallHeight / 2, room.z, room.w, wallHeight, wallThick);
+            // Back (z = room.z + room.d)
+            addWall(cx, wallHeight / 2, room.z + room.d, room.w, wallHeight, wallThick);
+            // Left (x = room.x)
+            addWall(room.x, wallHeight / 2, cz, wallThick, wallHeight, room.d);
+            // Right (x = room.x + room.w)
+            addWall(room.x + room.w, wallHeight / 2, cz, wallThick, wallHeight, room.d);
+
+            // Label (placed at ceiling height)
+            addLabel(room.name, cx, wallHeight + 1.5, cz, '#fff');
+        });
+
+        // -------- Add main gate indicator --------
+        const gateMat = new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0x442200 });
+        const gateGeo = new THREE.BoxGeometry(6, 8, 0.5);
+        const gate = new THREE.Mesh(gateGeo, gateMat);
+        gate.position.set(18, 4, -0.25);
+        gate.castShadow = true;
+        scene.add(gate);
+        addLabel('🚪 MAIN GATE', 18, 9, -1.5, '#ffaa44');
+              // -------- Add outline of the plot --------
+        const plotPoints = [
+            [0, 0], [37, 0], [37, 37], [0, 37], [0, 0]
+        ];
+        const plotGeo = new THREE.BufferGeometry();
+        const vertices = [];
+        plotPoints.forEach(p => {
+            vertices.push(p[0], 0.1, p[1]);
+        });
+        plotGeo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        const plotLine = new THREE.Line(
+            plotGeo,
+            new THREE.LineBasicMaterial({ color: 0xffaa66, linewidth: 2 })
+        );
+        scene.add(plotLine);
+
+        // Also a glowing transparent box around the plot
+        const plotBoxMat = new THREE.MeshBasicMaterial({
+            color: 0xffaa66,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15,
+        });
+        const plotBox = new THREE.Mesh(new THREE.BoxGeometry(37, 10, 37), plotBoxMat);
+        plotBox.position.set(18.5, 5, 18.5);
+        scene.add(plotBox);
+
+        // -------- Legend generation --------
+        const legendDiv = document.getElementById('legend');
+        rooms.forEach(room => {
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+            const colorHex = '#' + room.color.toString(16).padStart(6, '0');
+            item.innerHTML = `<span style="background:${colorHex};"></span> ${room.name}`;
+            legendDiv.appendChild(item);
+        });
+
+        // -------- Resize handler --------
+        window.addEventListener('resize', () => {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+            labelRenderer.setSize(w, h);
+        });
+
+        // -------- Animation loop --------
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+        animate();
+
+        console.log('🏠 3D House loaded!');
+    </script>
 </body>
 </html>
+```
+        
+    
